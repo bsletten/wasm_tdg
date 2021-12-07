@@ -19,3 +19,19 @@ drwxr-xr-x  5 brian  staff     160 Dec  7 07:42 ../
 > node a.out.js
 Hello, world!
 ```
+
+Obviously it is a standard C program so you can build it with `clang`
+or `gcc` as well and it should work as a standalone application.
+
+```
+> clang hello.c
+> ls -alF
+total 120
+drwxr-xr-x  5 brian  staff    160 Dec  7 07:55 ./
+drwxr-xr-x  6 brian  staff    192 Dec  7 07:53 ../
+-rw-r--r--  1 brian  staff    673 Dec  7 07:51 README.md
+-rwxr-xr-x  1 brian  staff  49424 Dec  7 07:55 a.out*
+-rw-r--r--  1 brian  staff     75 Dec  7 07:42 hello.c
+> ./a.out
+Hello, world!
+```
