@@ -1,0 +1,30 @@
+<!doctype html>
+
+<html>
+  <head>
+      <meta charset="utf-8">    
+      <title>WASM Import test</title>    
+      <script src="utils.js"></script>
+  </head>
+
+  <body>
+    <script>
+      var importObject = {
+        imports: {
+          log_func: function(arg) {
+            console.log("You are this old: " + arg + " years.");
+          },
+
+          log_func_2: function(arg) {
+            alert("You are this old: " + arg + " years.");
+          }
+        }
+      };
+
+      fetchAndInstantiate('hellolog.wasm', importObject).then(function(instance) {
+          console.log(instance.exports.log_how_old(2021, 2000));  
+      });
+
+    </script>
+  </body>
+</html>
