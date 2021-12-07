@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <head>
+      <meta charset="utf-8">    
+      <script src="utils.js"></script>
+  </head>
+  <body>
+    <title>Memory</title>
+    <div class="container">
+      <h1>Memory</h1>
+
+      <div>Your memory instance is <span id="mem"></span> bytes.</div>
+      <div>It has this many pages: <span id="pages"></span>.</div>
+      <div>Uint32Buffer[0] = <span id="firstint"></span>.</div>
+      <div>Uint8Buffer[0-4] = <span id="firstbytes"></span>.</div>
+    </div>
+
+    <button id="expand">Expand</button>
+
+    <script>
+      function showDetails(mem) {
+	  var buf = mem.buffer;
+	  
+	  var memEl = document.getElementById('mem');
+	  var pagesEl = document.getElementById('pages');
+	  var firstIntEl = document.getElementById('firstint');
+	  var firstBytesEl = document.getElementById('firstbytes');
+	      
+	  memEl.innerText=buf.byteLength;
+	  pagesEl.innerText=buf.byteLength / 65536;
+
+	  var i32 = new Uint32Array(buf);
+	  var u8 = new Uint8Array(buf);
+	      
+	  firstIntEl.innerText=i32[0];
+	  firstBytesEl.innerText= "[" + u8[0] + "," + u8[1] + "," + u8[2] + "," + u8[3] + "]";
+      };
+      
+      fetchAndInstantiate('memory.wasm').then(function(instance) {
+	  var mem = instance.exports.memory;
+
+	  var button = document.getElementById("expand");
+	  button.onclick = function() {
+	      try {
+		  mem.grow(1);
+		  showDetails(mem);		  
+	      } catch(re) {
+		  alert("You cannot grow the Memory any more!");
+	      };
+	  };
+
+	  showDetails(mem);
+      });
+    </script>
+  </body>
+</html>

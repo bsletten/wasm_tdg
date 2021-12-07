@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <title>Reading Strings From Memory</title>    
+    <script src="utils.js"></script>
+  </head>
+  <body>
+    <div>
+      <div>Japanese: <span id="japanese"></span></div>
+      <div>English: <span id="english"></span></div>
+    </div>
+    <script>
+      fetchAndInstantiate('strings2.wasm').then(function(instance) {
+	  var mem = instance.exports.memory;
+
+	  var dv = new DataView(mem.buffer);
+	  var start = dv.getUint8(0);
+	  var end = dv.getUint8(1);
+
+	  var bytes = new Uint8Array(mem.buffer, start, end);
+	  var string = new TextDecoder('utf8').decode(bytes);
+          var japanese = document.getElementById('japanese');
+	  japanese.innerText = string;
+	  
+	  start = dv.getUint8(2);
+	  end = dv.getUint8(3);
+	  
+	  bytes = new Uint8Array(mem.buffer, start, end);
+	  string = new TextDecoder('utf8').decode(bytes);
+          var english = document.getElementById('english');
+	  english.innerText = string;
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <head>
+      <meta charset="utf-8">    
+      <script src="utils.js"></script>
+  </head>
+  <body>
+    <title>Fibonacci</title>
+
+    <div id="container">
+    </div>
+    
+    <script>
+      var memory = new WebAssembly.Memory({initial:10, maximum:100});
+
+      var importObject = {
+        js: { mem: memory }
+      };
+
+      fetchAndInstantiate('memory2.wasm', importObject).then(function(instance) {
+	  var fibNum = 20;
+	  instance.exports.fibonacci(fibNum);
+	  var i32 = new Uint32Array(memory.buffer);
+
+	  var container = document.getElementById('container');
+	  
+	  for(var i = 0; i < fibNum; i++) {
+	      container.innerText += `Fib[${i}]: ${i32[i]}\n`;
+	  }
+      });
+
+    </script>
+  </body>
+</html>
