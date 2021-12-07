@@ -6,7 +6,8 @@ to higher level examples in subsequent chapters.
 
 You can paste the `hello.wat` file using [wat2wasm
 demo](https://webassembly.github.io/wabt/demo/wat2wasm/index.html) or
-by installing the Wabt tools and executing the following:
+by installing the [Wabt](https://github.com/WebAssembly/wabt) tools
+and executing the following:
 
 ```
 > wat2wasm hello.wat
