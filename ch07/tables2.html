@@ -1,0 +1,30 @@
+<!doctype html>
+
+<html>
+  <head>
+      <title>WASM Dynamic Linking test</title> 
+      <meta charset="utf-8">    
+      <script src="utils.js"></script>
+      <link rel="icon" href="data:;base64,=">      
+  </head>
+
+  <body>
+    <script>
+      var importObject = {
+	  js: {
+	      memory: new WebAssembly.Memory({ initial: 1 }),
+	      table: new WebAssembly.Table({ initial:2, element:"anyfunc" })
+	  }
+      };
+
+      Promise.all([
+          fetchAndInstantiate('math2.wasm', importObject),
+	  fetchAndInstantiate('mymath.wasm', importObject)
+      ]).then(function(instances) {
+	  console.log("4 + 3 = " + instances[1].exports.myadd(4,3));
+          console.log("4 - 3 = " + instances[1].exports.mysub(4,3));	  
+      });
+
+    </script>
+  </body>
+</html>

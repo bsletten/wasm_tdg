@@ -1,0 +1,23 @@
+<!doctype html>
+
+<html>
+  <head>
+      <title>WASM Table test</title>    
+      <meta charset="utf-8">    
+      <script src="utils.js"></script>
+      <link rel="icon" href="data:;base64,=">      
+  </head>
+
+  <body>
+    <script>
+      var t;
+      
+      fetchAndInstantiate('math.wasm').then(function(instance) {
+	  var tbl = instance.exports.tbl;
+	  t = tbl;
+	  console.log("3 + 1 = " + tbl.get(0)(3,1));
+  	  console.log("3 - 1 = " + tbl.get(1)(3,1));
+      });
+    </script>
+  </body>
+</html>
