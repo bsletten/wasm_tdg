@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <title>How Old Are You?</title>    
+    <script src="utils.js"></script>
+  </head>
+  <body>
+    <div id="container" class="container" style="width:  80%">
+      <h1>How Old Are You?</h1>
+      <label for="year" id="yearborn" class="form-label">Year Born</label>      
+      <input type="range" class="form-range" id="year" name="year" value="0"/>
+      <div class="form-label">You are: <span id="age"/></div>
+    </div>
+    
+    <script>
+      var d = new Date();
+      var currentYear = d.getFullYear();
+      var slider = document.getElementById("year");
+      var yearBorn = document.getElementById("yearborn");
+      var ageSpan = document.getElementById("age");
+     
+      fetchAndInstantiate('howold.wasm').then(function(instance) {
+	  slider.setAttribute("min", currentYear - 100);
+	  slider.setAttribute("max", currentYear);
+
+	  var updateLabels = function(val, age) {
+	      yearBorn.innerText =  "Year Born: " + val;
+	      ageSpan.innerText = age;
+	  };
+
+	  var listener = function() {
+	      var age = instance.exports.howOld(currentYear, slider.value);
+	      updateLabels(slider.value, age);
+	  };
+
+	  slider.onchange = listener;
+	  slider.oninput = listener;
+	  slider.value = "1972";
+
+	  updateLabels(1972, 49);
+      });
+    </script>
+  </body>
+</html>

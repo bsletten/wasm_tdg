@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+</head>
+<body>
+
+<h1>Control</h1>
+<p>
+	<button onclick="wasm.instance.exports.debug_dump_memory();">
+		Dump memory
+	</button>
+</p>
+<script>
+let wasm;
+
+function get_memory() {
+	return new Uint8Array(wasm.instance.exports.memory.buffer);
+}
+
+const decoder = new TextDecoder("utf-8");
+const encoder = new TextEncoder("utf-8");
+
+function charPtrToString(str) {
+	const memory = get_memory();
+	let length=0;
+	for (; memory[str + length] !== 0 ;++length) {}
+	return decoder.decode(memory.subarray(str, str + length));
+}
+
+function stringToCharPtr(str) {
+	const data = encoder.encode(str + "\x00");
+    const ptr = wasm.instance.exports.get_memory_for_string(data.length + 1);
+	const memory = get_memory();
+	memory.subarray(ptr).set(data);
+	return ptr;
+}
+
+function reverse(arr) {
+    const ptr = wasm.instance.exports.get_memory_for_string(100);
+    const memory = get_memory();
+    const nums = memory.subarray(ptr);
+    for(let i = 0; i < 10; i++) {
+	nums[i] = i;
+    }
+    wasm.instance.exports.reverse(ptr, 10);
+
+    console.log(nums);
+}
+
+function freeCharPtr(ptr) {
+	wasm.instance.exports.free_memory_for_string(ptr);
+}
+
+/* Randomize array in-place using Durstenfeld shuffle algorithm */
+  function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
+  
+
+// If the Webassemby module had been linked with
+//
+//   --import-memory
+//
+// its memory will be provided with
+//
+//   const wasmMemory = new WebAssembly.Memory({initial:10, maximum:100});
+//   const memory = new Uint8Array(wasmMemory.buffer);
+//
+// But this module is providing its own memory and exporting it.
+
+let printString = function(str) {
+	console.log(str);
+};
+
+const importObject = {
+	env: {
+		print_string: function(str) {
+			printString(charPtrToString(str));
+		}
+	}
+};
+
+  WebAssembly.instantiateStreaming(fetch('library.wasm'), importObject).then(function(obj) {
+      wasm = obj;
+      
+    const ptr = wasm.instance.exports.get_memory_for_int_array(10);
+    const memory = new Uint8Array(wasm.instance.exports.memory.buffer);
+    const nums = memory.subarray(ptr);
+
+    for(var i = 0; i < 10; i++) {
+	nums[i] = i;
+    }
+
+    console.log(nums);
+    
+    wasm.instance.exports.reverse(ptr, 10);
+
+    console.log(nums);
+
+    var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    shuffleArray(arr);
+
+    for(var i = 0; i < 10; i++) {
+	nums[i] = arr[i];
+    }
+    
+    console.log(nums);
+
+    wasm.instance.exports.mergeSort(ptr, 10);
+
+    console.log(nums);    
+    
+      wasm.instance.exports.free_memory_for_int_array(ptr);
+
+      wasm.instance.exports.helloWorld();
+	    
+	});
+</script>
+</body>
+</html>
