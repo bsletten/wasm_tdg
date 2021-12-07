@@ -1,4 +1,4 @@
-** Chapter 1 : Introduction
+## Chapter 1 : Introduction
 
 There are not many code samples in this chapter, but we do have the
 recurring "Hello, World!" example in `hello.c`. We can compile this to
