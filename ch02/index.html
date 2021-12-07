@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <title>Hello, World! (Sort of)</title>    
+    <script src="utils.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Hello, World! (Sort of)</h1>
+      I think you are <span id="age"></span> years old.
+    </div>
+
+    <script>
+      fetchAndInstantiate('hello.wasm').then(function(instance) {
+	  var ho = instance.exports.how_old(2021,2000);
+	  var ageEl = document.getElementById('age');
+	  ageEl.innerText=ho;
+      });
+    </script>
+  </body>
+</html>
