@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset="utf-8">
+    <title>geo-example</title>
+    <link rel="icon" href="data:;base64,=">    
+  </head>
+
+<body>
+  <script type="module">
+    import init, {describe_location} from "./pkg/geo_example.js";
+    init()
+       .then(() => {
+	  getLocation();
+       });
+
+    var output = document.getElementById("output");
+    
+    function getLocation() {
+       if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(showPosition);
+       } else { 
+          output.innerHTML = "This browser doesn't support Geolocation.";
+       }
+    }
+
+    function showPosition(position) {
+        output.innerHTML = "Your position:<br>Latitude: " + position.coords.latitude.toFixed(2) + 
+	    "<br>Longitude: " + position.coords.longitude.toFixed(2);
+
+	describe_location(position.coords.latitude, position.coords.longitude);	
+    }
+  </script>
+
+  <p>Open up your JavaScript console and allow the browser to see your current location</p>
+  <p id="output"></p>
+</body>
+</html>
+
