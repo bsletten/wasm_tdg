@@ -1,4 +1,4 @@
-## Chapter 7 : WebAssembly in the Server
+## Chapter 8 : WebAssembly in the Server
 
 This chapter exists the browser for Node.js and Deno. While I didn't
 want to create overly complicated examples for the book itself, I will
