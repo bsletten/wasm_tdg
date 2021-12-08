@@ -8,5 +8,6 @@ various libraries and runtimes. This will allow me to continue to
 discuss things that were not widely supported at the time of writing
 including threads, SIMD, etc.
 
-Note: Dec. 7, 2021: I am updating it as we speak. I thought I had one
-more day to straighten it out but it will be live later today.
+Note: Dec. 7, 2021: I am updating it as we speak. A good portion is
+up. I am refactoring the projects as I check them in. The rest should
+be in Dec. 8, 2021.
