@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "uL4wBYsEuiOORt/wu6VJDYhLBdjh584qgC1sVshgLmy4tJVnJKHjV1ZI4Rm38C8nFN4DUh9HWGKAEz25FVVjwQ==",
+  "success": true,
+  "projectFilePath": "/Users/brian/git-personal/wasm_tdg/ch13/wasmtime-dotnet/wasmtime-dotnet.csproj",
+  "expectedPackageFiles": [
+    "/Users/brian/.nuget/packages/microsoft.csharp/4.6.0/microsoft.csharp.4.6.0.nupkg.sha512",
+    "/Users/brian/.nuget/packages/wasmtime/0.28.0-preview1/wasmtime.0.28.0-preview1.nupkg.sha512"
+  ],
+  "logs": []
+}
