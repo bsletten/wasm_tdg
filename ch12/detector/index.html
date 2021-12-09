@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script type="module">
+      import {
+	       bigInt,
+	       bulkMemory,
+	       exceptions,
+//	       memory64,
+	       multiValue,
+	       mutableGlobals,
+	       referenceTypes,
+	       saturatedFloatToInt,
+	       signExtensions,
+	       simd,
+	       tailCall
+	     } from "https://unpkg.com/wasm-feature-detect?module";
+
+      function test(test, promise) {
+	  promise().then( supported => {
+	      console.log("Test: " + test + " is " + supported);
+	  });
+      }
+
+      test("BIGINT", bigInt);
+      test("BULK MEMORY", bulkMemory);
+      test("EXCEPTIONS", exceptions);
+//      test("MEMORY64", memory64);
+      test("MULTIVALUE", multiValue);
+      test("MUTABLEGLOBALS", mutableGlobals);
+      test("REFERENCETYPES", referenceTypes);
+      test("NONTRAPPING F-to-I", saturatedFloatToInt);
+      test("SIGN EXTENSIONS", signExtensions);
+      test("SIMD",  simd);
+      test("TAIL CALL", tailCall);
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
