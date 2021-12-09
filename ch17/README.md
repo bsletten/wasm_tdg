@@ -16,6 +16,7 @@ You are: 21
 The WASI-based example in `preopens.zig` can be built and executed
 from a WASI environment as follows:
 
+```
 > zig build-exe preopens.zig -target wasm32-wasi
 > wasmtime preopens.wasm
 <Nothing Happens>
@@ -24,4 +25,4 @@ from a WASI environment as follows:
 > wasmer --dir=. preopens.wasm
 0: Preopen{ .fd = 3, .type = PreopenType{ .Dir = '@"/\x00"' } }
 1: Preopen{ .fd = 4, .type = PreopenType{ .Dir = '@".\x00"' } }
-
+```
