@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="icon" href="data:;base64,=">
+    <script src="utils.js"></script>
+  </head>
+  <body>
+    <title>AssemblyScript and Wasm Memory</title>
+    <script>
+
+      fetchAndInstantiate('mem.wasm').then(function(instance) {
+	  var mem = instance.exports.memory;
+	  var u8Arr = new Uint8Array(mem.buffer);
+	  
+          let location = instance.exports.whereToStore();
+	  u8Arr[location] = 123;
+
+	  let value = instance.exports.readFromLocation(location);
+	  console.log("Round-tripped value: " + value);
+      });
+    </script>
+  </body>
+</html>
