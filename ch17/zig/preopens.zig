@@ -3,7 +3,7 @@ const PreopenList = std.fs.wasi.PreopenList;
 
 pub fn main() !void {
     var general_purpose_allocator = std.heap.GeneralPurposeAllocator(.{}){};
-    const gpa = &general_purpose_allocator.allocator;
+    const gpa = general_purpose_allocator.allocator();
 
     var preopens = PreopenList.init(gpa);
     defer preopens.deinit();
