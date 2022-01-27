@@ -2,13 +2,13 @@
     (func $log (import "imports" "log_func") (param i32))
 
     (func $how_old (param $year_now i32) (param $year_born i32) (result i32)
-        get_local $year_now
-        get_local $year_born
+        local.get $year_now
+        local.get $year_born
         i32.sub)
 
     (func $log_how_old (param $year_now i32) (param $year_born i32)
-       	get_local $year_now
-	get_local $year_born
+       	local.get $year_now
+	local.get $year_born
 	call $how_old
 	call $log
     )
