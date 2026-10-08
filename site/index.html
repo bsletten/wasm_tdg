@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WebAssembly: The Definitive Guide — Live Examples</title>
+    <meta name="description" content="Runnable browser examples from the book WebAssembly: The Definitive Guide, built by CI and served from GitHub Pages.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>&#128230;</text></svg>">
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fcfcfd; --fg: #15171a; --muted: #5c6370;
+        --line: #e3e5e9; --card: #ffffff; --accent: #4a3aff;
+        --page: #0a7a28; --console: #8a6d00; --perm: #9a3412;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121316; --fg: #e9eaec; --muted: #9aa0ab;
+          --line: #2a2d33; --card: #1a1c21; --accent: #9b8cff;
+          --page: #4ade80; --console: #fbbf24; --perm: #fb923c;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: var(--bg); color: var(--fg);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        line-height: 1.55; -webkit-text-size-adjust: 100%;
+      }
+      .wrap { max-width: 56rem; margin: 0 auto; padding: 2.5rem 1rem 4rem; }
+      h1 { font-size: clamp(1.6rem, 4.5vw, 2.3rem); line-height: 1.15; margin: 0 0 .4rem; letter-spacing: -.02em; }
+      .sub { color: var(--muted); margin: 0 0 1.6rem; font-size: 1.05rem; }
+      h2 {
+        font-size: .82rem; text-transform: uppercase; letter-spacing: .09em;
+        color: var(--muted); margin: 2.4rem 0 .7rem; padding-bottom: .4rem;
+        border-bottom: 1px solid var(--line); font-weight: 600;
+      }
+      a { color: var(--accent); }
+      .intro { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 1rem 1.15rem; margin-bottom: .5rem; }
+      .intro p { margin: .5rem 0; }
+      .intro p:first-child { margin-top: 0; }
+      .intro p:last-child { margin-bottom: 0; }
+      ul.grid { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+      @media (min-width: 42rem) { ul.grid { grid-template-columns: 1fr 1fr; } }
+      li.card {
+        border: 1px solid var(--line); background: var(--card); border-radius: 10px;
+        padding: .8rem .9rem; display: flex; flex-direction: column; gap: .35rem;
+      }
+      .card .top { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+      .card .name { font-weight: 650; font-size: 1rem; }
+      .card .name a { text-decoration: none; }
+      .card .name a:hover { text-decoration: underline; }
+      .card .desc { color: var(--muted); font-size: .9rem; margin: 0; }
+      .card .links { font-size: .82rem; display: flex; gap: .9rem; margin-top: .15rem; }
+      .tag {
+        flex: none; font-size: .66rem; text-transform: uppercase; letter-spacing: .06em;
+        font-weight: 700; padding: .15rem .4rem; border-radius: 4px; white-space: nowrap;
+        border: 1px solid currentColor;
+      }
+      .t-page { color: var(--page); }
+      .t-console { color: var(--console); }
+      .t-perm { color: var(--perm); }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+      .legend { font-size: .85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 1rem; margin: .3rem 0 0; }
+      footer { margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+      footer p { margin: .5rem 0; }
+      details { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: .7rem .9rem; }
+      details summary { cursor: pointer; font-weight: 600; }
+      details table { border-collapse: collapse; width: 100%; margin-top: .7rem; font-size: .9rem; }
+      details th, details td { text-align: left; padding: .3rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+      details th { color: var(--muted); font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>WebAssembly: The Definitive Guide</h1>
+      <p class="sub">Live, runnable browser examples from the book &mdash; built by CI, served from GitHub Pages.</p>
+
+      <div class="intro">
+        <p>
+          Every example below is compiled from source in
+          <a href="https://github.com/bsletten/wasm_tdg">the book's repository</a>
+          by <a href="https://github.com/bsletten/wasm_tdg/actions/workflows/pages.yml">a GitHub Actions workflow</a>
+          and published here. Nothing is pre-baked by hand: the <code>.wasm</code>
+          you load is the output of <code>wat2wasm</code>, <code>clang</code>,
+          <code>emcc</code>, <code>rustc</code>, <code>asc</code> or
+          <code>dotnet</code> running in CI.
+        </p>
+        <p>
+          Many of these examples are deliberately minimal and report their
+          results to the JavaScript console rather than the page &mdash; that is
+          how they appear in the book. <strong>Open your developer tools before
+          loading one marked <span class="tag t-console">console</span>.</strong>
+        </p>
+        <p class="legend">
+          <span><span class="tag t-page">page</span> renders visible output</span>
+          <span><span class="tag t-console">console</span> logs to devtools</span>
+          <span><span class="tag t-perm">asks</span> needs a browser permission</span>
+        </p>
+      </div>
+
+      <h2>Chapter 2 &mdash; &ldquo;Hello, World!&rdquo; (Sort of)</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch02/">how_old</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">Hand-written <code>.wat</code>, assembled by <code>wat2wasm</code> in CI. Two <code>local.get</code>s and an <code>i32.sub</code>.</p>
+          <div class="links"><a href="ch02/">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch02/hello.wat">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Chapter 3 &mdash; WebAssembly Modules</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch03/imports.html">Imports</a></span><span class="tag t-console">console</span></div>
+          <p class="desc">A module importing a JavaScript function and calling back into it.</p>
+          <div class="links"><a href="ch03/imports.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch03/imports.html">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch03/imports2.html">Module reflection</a></span><span class="tag t-console">console</span></div>
+          <p class="desc"><code>WebAssembly.Module.imports()</code> and <code>.exports()</code> describing a compiled module.</p>
+          <div class="links"><a href="ch03/imports2.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch03/imports2.html">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch03/preferred.html">instantiateStreaming</a></span><span class="tag t-console">console</span></div>
+          <p class="desc">The preferred instantiation path &mdash; compiling straight off the network response.</p>
+          <div class="links"><a href="ch03/preferred.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch03/preferred.html">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Chapter 4 &mdash; WebAssembly Memory</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch04/index.html">Exported memory</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">Reading bytes a module placed in its own linear memory via a <code>data</code> segment.</p>
+          <div class="links"><a href="ch04/index.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch04/memory.wat">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch04/memory.html">Imported memory</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">JavaScript creates the <code>WebAssembly.Memory</code> and hands it to the module.</p>
+          <div class="links"><a href="ch04/memory.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch04/memory2.wat">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch04/fibonacci.html">Fibonacci in memory</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">A loop writing a sequence into shared linear memory, read back as a typed array.</p>
+          <div class="links"><a href="ch04/fibonacci.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch04/memory2.wat">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch04/strings.html">Strings by hand</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">Getting UTF-8 out of linear memory with <code>TextDecoder</code>. There are no strings in core wasm.</p>
+          <div class="links"><a href="ch04/strings.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch04/strings.wat">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch04/strings2.html">Length-prefixed strings</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">The same, but the module stores the byte length alongside the data.</p>
+          <div class="links"><a href="ch04/strings2.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch04/strings2.wat">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Chapter 5 &mdash; Using C/C++</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch05/howold.html">howOld in C</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">C compiled by <code>clang --target=wasm32 -nostdlib</code>. No runtime, no libc, 692 bytes.</p>
+          <div class="links"><a href="ch05/howold.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch05/howold2.c">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch05/helloworld/">Merge sort + nanolibc</a></span><span class="tag t-console">console</span></div>
+          <p class="desc">C++ against a hand-rolled minimal libc, linked with <code>wasm-ld</code>. Allocates memory for JavaScript to fill.</p>
+          <div class="links"><a href="ch05/helloworld/">Run</a><a href="https://github.com/bsletten/wasm_tdg/tree/main/ch05/helloworld">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Chapter 6 &mdash; Legacy Code in the Browser</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch06/hello.html">Emscripten hello</a></span><span class="tag t-console">console</span></div>
+          <p class="desc">Unmodified C with <code>printf</code>, built by <code>emcc</code> with its JavaScript scaffolding.</p>
+          <div class="links"><a href="ch06/hello.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch06/hello.c">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch06/hello-delay.html">Deferred main()</a></span><span class="tag t-console">console</span></div>
+          <p class="desc">The same module with <code>INVOKE_RUN=0</code>, so <code>main()</code> runs when you press the button.</p>
+          <div class="links"><a href="ch06/hello-delay.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch06/hello-delay.html">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch06/bitmap/">Bitmap library &rarr; canvas</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">Arash Partow's C++ BMP library, unported. It writes a Julia set into Emscripten's in-memory filesystem; JavaScript reads the file out and paints it.</p>
+          <div class="links"><a href="ch06/bitmap/">Run</a><a href="https://github.com/bsletten/wasm_tdg/tree/main/ch06/bitmap">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Chapter 7 &mdash; WebAssembly Tables</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch07/tables.html">Indirect calls</a></span><span class="tag t-console">console</span></div>
+          <p class="desc">An exported <code>funcref</code> table, called from JavaScript by index.</p>
+          <div class="links"><a href="ch07/tables.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch07/math.wat">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch07/tables2.html">Dynamic linking</a></span><span class="tag t-console">console</span></div>
+          <p class="desc">Two modules sharing a table and a memory supplied by JavaScript &mdash; linking before the component model.</p>
+          <div class="links"><a href="ch07/tables2.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch07/tables2.html">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Chapter 10 &mdash; Rust</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch10/index.html">rustc &rarr; wasm32</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">A <code>#[no_mangle] extern "C"</code> function, compiled with plain <code>rustc</code> &mdash; no bindings layer.</p>
+          <div class="links"><a href="ch10/index.html">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch10/add.rs">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch10/geo-example/">wasm-bindgen + web-sys</a></span><span class="tag t-perm">asks</span></div>
+          <p class="desc">Rust touching the DOM and <code>console</code> directly through <code>web-sys</code>. Asks for your location; it only compares against one hard-coded point.</p>
+          <div class="links"><a href="ch10/geo-example/">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch10/geo-example/src/lib.rs">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Chapter 12 &mdash; Extending the Platform</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch12/detector/">Feature detector</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">All 23 proposals <code>wasm-feature-detect</code> can probe, tested against <em>your</em> browser. The book could test eleven.</p>
+          <div class="links"><a href="ch12/detector/">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch12/detector/index.html">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Chapter 13 &mdash; WebAssembly and .NET</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch13/blazor/">Blazor WebAssembly</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">A whole .NET runtime running in the browser. Published with <code>dotnet publish</code> in CI; the first load pulls down several megabytes of runtime.</p>
+          <div class="links"><a href="ch13/blazor/">Run</a><a href="https://github.com/bsletten/wasm_tdg/tree/main/ch13/blazor-web">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Chapter 14 &mdash; AssemblyScript</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch14/hello/">add()</a></span><span class="tag t-console">console</span></div>
+          <p class="desc">TypeScript-shaped source compiled by <code>asc</code> to a 93-byte module.</p>
+          <div class="links"><a href="ch14/hello/">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch14/hello/hello.ts">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch14/hello-imp/">Importing JavaScript</a></span><span class="tag t-console">console</span></div>
+          <p class="desc">A <code>declare function</code> in AssemblyScript becomes a wasm import under the <code>hello</code> namespace.</p>
+          <div class="links"><a href="ch14/hello-imp/">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch14/hello-imp/hello.ts">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch14/as-mem/">Memory access</a></span><span class="tag t-console">console</span></div>
+          <p class="desc"><code>memory.grow</code>, <code>load</code> and <code>store</code> as AssemblyScript builtins, round-tripped through JavaScript.</p>
+          <div class="links"><a href="ch14/as-mem/">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch14/as-mem/mem.ts">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch14/stdlib/">Standard library</a></span><span class="tag t-console">console</span></div>
+          <p class="desc"><code>Math.PI</code> and <code>Math.pow</code> compiled into the module &mdash; note the resulting size.</p>
+          <div class="links"><a href="ch14/stdlib/">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch14/stdlib/stdlib.ts">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="ch14/loader/">Strings via the loader</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">The AssemblyScript loader allocating strings inside the module's memory, so a function can take and return one.</p>
+          <div class="links"><a href="ch14/loader/">Run</a><a href="https://github.com/bsletten/wasm_tdg/blob/main/ch14/loader/loader.ts">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Additional exercises &mdash; where WebAssembly is now</h2>
+      <ul class="grid">
+        <li class="card">
+          <div class="top"><span class="name"><a href="additional-exercises/04-simd/">SIMD</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">The same dot product compiled scalar and with <code>f32x4</code> intrinsics, timed against each other in your browser. Roughly 4&times; locally.</p>
+          <div class="links"><a href="additional-exercises/04-simd/">Run</a><a href="https://github.com/bsletten/wasm_tdg/tree/main/additional-exercises/04-simd">Source</a></div>
+        </li>
+        <li class="card">
+          <div class="top"><span class="name"><a href="additional-exercises/05-threads/">Threads</a></span><span class="tag t-page">page</span></div>
+          <p class="desc">Four pthreads over a <code>SharedArrayBuffer</code>. Needs cross-origin isolation, which GitHub Pages cannot set &mdash; a service worker supplies the headers, so the first load reloads itself once.</p>
+          <div class="links"><a href="additional-exercises/05-threads/">Run</a><a href="https://github.com/bsletten/wasm_tdg/tree/main/additional-exercises/05-threads">Source</a></div>
+        </li>
+      </ul>
+
+      <h2>Not hosted here</h2>
+      <details>
+        <summary>Examples that cannot run in a browser &mdash; and why</summary>
+        <table>
+          <tr><th>Example</th><th>Why not</th></tr>
+          <tr><td>Ch. 1, Ch. 5 <code>simple*.c</code></td><td>Native executables; the point is comparing them to the wasm build.</td></tr>
+          <tr><td>Ch. 8 &mdash; Node, Deno, N-API addon</td><td>Server-side hosts. The whole subject is WebAssembly <em>outside</em> the browser.</td></tr>
+          <tr><td>Ch. 11 &mdash; WASI</td><td>Command-line modules run by <code>wasmtime</code>/<code>wasmer</code>, with capabilities granted by flags.</td></tr>
+          <tr><td>Ch. 12 &mdash; <code>hello-wasi</code>, <code>-mvr</code>, <code>-extref</code>, <code>-modlink</code></td><td>Native Rust programs that <em>embed</em> wasmtime as a library.</td></tr>
+          <tr><td>Ch. 13 &mdash; <code>wasmtime-dotnet</code></td><td>A .NET console app embedding wasmtime.</td></tr>
+          <tr><td>Ch. 17 &mdash; Zig</td><td>One runs under Node, the other is a WASI command.</td></tr>
+          <tr><td>Exercises 01, 02, 03, 06</td><td>WASI Preview 2/3 components and a <code>wasi:http</code> server &mdash; no browser runs components yet.</td></tr>
+        </table>
+        <p style="color:var(--muted);font-size:.9rem;margin-bottom:0">
+          All of these are still built and run by CI on every push; they just
+          produce terminal output rather than a page.
+        </p>
+      </details>
+
+      <footer>
+        <p>
+          Companion site to <em>WebAssembly: The Definitive Guide</em> by Brian Sletten
+          (O'Reilly). Source, errata and the non-browser examples:
+          <a href="https://github.com/bsletten/wasm_tdg">github.com/bsletten/wasm_tdg</a>.
+        </p>
+        <p>
+          For these ideas assembled into something substantial, see the
+          <a href="https://ikigai-rs.github.io/ikigai-web-demo/">ikigai resolution kernel</a>
+          &mdash; a resource-oriented computing kernel running entirely in the
+          browser, with its XSLT and JSON-LD engines loaded lazily on first use
+          (<a href="https://github.com/ikigai-rs/ikigai-web-demo">source</a>).
+        </p>
+        <p id="built"></p>
+      </footer>
+    </div>
+    <script>
+      // Replaced by the deploy workflow with the commit and build time.
+      const meta = document.getElementById("built");
+      const info = document.documentElement.dataset.build;
+      if (info) meta.textContent = info;
+    </script>
+  </body>
+</html>

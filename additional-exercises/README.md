@@ -20,6 +20,13 @@ organised roughly in the order the ideas build on each other.
 Every directory has a `Makefile`. `make run` builds and runs (`make serve` for
 02 and 05).
 
+Two of these run in a browser and are hosted on the
+[live example site](https://bsletten.github.io/wasm_tdg/):
+[SIMD](https://bsletten.github.io/wasm_tdg/additional-exercises/04-simd/) and
+[threads](https://bsletten.github.io/wasm_tdg/additional-exercises/05-threads/).
+The rest are WASI components or a server, so they only make sense from a
+terminal.
+
 ## The one big idea: core modules became components
 
 If you read only one thing here, make it 01 and 03.

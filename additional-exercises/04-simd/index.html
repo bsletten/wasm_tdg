@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:;base64,=">
+    <title>WebAssembly SIMD</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font-family: system-ui, -apple-system, sans-serif; margin: 0 auto; padding: 2rem 1rem;
+             max-width: 44rem; line-height: 1.5; }
+      h1 { margin-top: 0; }
+      table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+      th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid #8884; }
+      th { border-bottom: 2px solid #8888; }
+      td.num { font-variant-numeric: tabular-nums; font-family: ui-monospace, monospace; }
+      code { font-family: ui-monospace, monospace; }
+      button { font: inherit; padding: .5rem 1rem; cursor: pointer; }
+      .ok { color: #0a7a28; font-weight: 600; }
+      .no { color: #b00; font-weight: 600; }
+      .speedup { font-size: 1.6rem; font-weight: 700; }
+      .note { opacity: .75; font-size: .9rem; }
+      a { color: inherit; }
+    </style>
+  </head>
+  <body>
+    <h1>WebAssembly SIMD</h1>
+    <p>
+      One <code>v128</code> value holds four <code>f32</code> lanes, so a dot
+      product can consume four elements per instruction. The same dot product
+      is compiled twice &mdash; once scalar, once with <code>f32x4</code>
+      intrinsics &mdash; so the results can be checked against each other and
+      timed in your browser.
+    </p>
+
+    <p id="support"></p>
+    <p><button id="run" disabled>Run benchmark</button></p>
+
+    <table>
+      <tbody id="results"></tbody>
+    </table>
+
+    <p class="note" id="drift-note"></p>
+
+    <p class="note">
+      SIMD was still a proposal when <em>WebAssembly: The Definitive Guide</em>
+      was written. <a href="https://github.com/bsletten/wasm_tdg/tree/main/additional-exercises/04-simd">Source
+      and a Node harness</a>.
+    </p>
+
+    <script type="module">
+      import { simd } from "https://cdn.jsdelivr.net/npm/wasm-feature-detect@1.9.0/dist/esm/index.js";
+
+      const support = document.getElementById("support");
+      const button  = document.getElementById("run");
+      const tbody   = document.getElementById("results");
+      const note    = document.getElementById("drift-note");
+
+      const row = (label, value, cls = "num") => {
+	  const tr = tbody.insertRow();
+	  tr.insertCell().textContent = label;
+	  const td = tr.insertCell();
+	  td.className = cls;
+	  if (value instanceof Node) td.appendChild(value); else td.textContent = value;
+      };
+
+      if (!(await simd())) {
+	  support.innerHTML = '<span class="no">This browser does not support simd128.</span> ' +
+	      'The module would fail to validate, so the benchmark is disabled.';
+      } else {
+	  support.innerHTML = '<span class="ok">simd128 is supported.</span>';
+	  button.disabled = false;
+      }
+
+      let exports;
+
+      async function load() {
+	  if (exports) return exports;
+	  const { instance } = await WebAssembly.instantiateStreaming(fetch("simd.wasm"), {});
+	  exports = instance.exports;
+	  return exports;
+      }
+
+      button.onclick = async () => {
+	  button.disabled = true;
+	  button.textContent = "running...";
+	  tbody.replaceChildren();
+	  note.textContent = "";
+
+	  const ex = await load();
+	  const N = ex.capacity();
+	  const mem = new Float32Array(ex.memory.buffer);
+	  const aOff = ex.buffer_a() / 4;
+	  const bOff = ex.buffer_b() / 4;
+
+	  for (let i = 0; i < N; i++) {
+	      mem[aOff + i] = Math.fround(Math.sin(i) * 2);
+	      mem[bOff + i] = Math.fround(Math.cos(i) * 3);
+	  }
+
+	  const scalar = ex.dot_scalar(N);
+	  const vector = ex.dot_simd(N);
+
+	  const bench = (fn, reps) => {
+	      const t0 = performance.now();
+	      for (let i = 0; i < reps; i++) fn(N);
+	      return performance.now() - t0;
+	  };
+	  bench(ex.dot_scalar, 2000);       // warm up
+	  bench(ex.dot_simd, 2000);
+	  const ts = bench(ex.dot_scalar, 20000);
+	  const tv = bench(ex.dot_simd, 20000);
+
+	  row("lanes", `${N} f32 pairs`);
+	  row("dot_scalar", scalar);
+	  row("dot_simd", vector);
+	  row("scalar time", `${ts.toFixed(1)} ms`);
+	  row("simd time", `${tv.toFixed(1)} ms`);
+
+	  const span = document.createElement("span");
+	  span.className = "speedup";
+	  span.textContent = `${(ts / tv).toFixed(2)}×`;
+	  row("speedup", span);
+
+	  const drift = Math.abs(scalar - vector) / Math.max(1, Math.abs(scalar));
+	  note.textContent =
+	      `The two results differ by ${drift.toExponential(2)} relative. That is expected, not a bug: ` +
+	      `lane-wise accumulation adds the terms in a different order, and f32 addition is not associative.`;
+
+	  button.textContent = "Run again";
+	  button.disabled = false;
+      };
+    </script>
+  </body>
+</html>
