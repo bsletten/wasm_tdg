@@ -117,7 +117,14 @@ jobs:
       - name: additional-exercises 05-threads
         run: |
           set -eux
-          cd additional-exercises/05-threads && make && node threads.js
+          cd additional-exercises/05-threads
+          make
+          node threads.js
+          # Evaluates the browser page and threads.js in one shared global, the
+          # way a browser does. Guards against a global const/let in the page
+          # colliding with one of Emscripten's top-level vars, which stops
+          # threads.js evaluating entirely.
+          make check
 
   rust:
     name: Rust

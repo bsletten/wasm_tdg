@@ -58,6 +58,47 @@ the second load is cross-origin isolated. That is why the hosted copy at
 flickers on first visit. Served by `server.py` the real headers are already
 there and the worker does nothing.
 
+## A trap worth knowing about
+
+The first version of `index.html` here was broken, and the failure mode is
+worth recording because it is easy to hit and the symptom points nowhere
+useful.
+
+Emscripten's generated `threads.js` is a *classic* script, and like most
+generated JavaScript it is wall-to-wall top-level `var` declarations --
+including `var out` and `var err`. The page's own inline script happened to
+declare:
+
+```js
+const out = document.getElementById("out");
+```
+
+A global `var` cannot be declared when a global `let`/`const` of the same name
+already exists, so the browser rejected the whole of `threads.js` with:
+
+```
+Uncaught SyntaxError: Identifier 'out' has already been declared
+```
+
+That is thrown while *evaluating* the file, so not one line of it ever ran. No
+output, no module, no workers -- and nothing in the error that suggests "your
+page picked an unlucky variable name."
+
+Two changes fix it and prevent the class of problem:
+
+* the page's script is wrapped in an IIFE, so none of its names reach global
+  scope (`Module` is the one that must be global, and is set on `window`
+  explicitly);
+* `threads.js` is loaded with a plain static `<script src>` tag. Emscripten
+  reads `document.currentScript.src` to find the URL it hands to
+  `new Worker(...)` for each pthread, so it needs to be executed the ordinary
+  way.
+
+`make check` guards this. `check-page.mjs` evaluates the page's inline script
+and `threads.js` in one shared V8 global, the way a browser does, and asserts
+that the two coexist and that the pthread workers get a real script URL rather
+than `undefined`. It runs in CI.
+
 To confirm the atomics really are in the binary:
 
 ```
