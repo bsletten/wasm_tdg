@@ -17,10 +17,23 @@ You can build the standalone function to WebAssembly using the following:
 > clang --target=wasm32 -nostdlib -Wl,--no-entry -Wl,--export-all howold2.c -o howold.wasm
 ```
 
+**You need a `wasm-ld` on your `PATH` for this to work.** `clang` itself
+knows how to *compile* for `wasm32`, but linking needs LLVM's WebAssembly
+linker, and that does not ship with Apple's command line tools (you get
+`clang: error: unable to execute command: posix_spawn failed`). On macOS:
+
+```
+> brew install lld
+> export PATH="$(brew --prefix lld)/bin:$PATH"
+```
+
+Alternatively, the [WASI SDK](https://github.com/WebAssembly/wasi-sdk) and
+the Emscripten SDK both bundle a matching `clang` and `wasm-ld`.
+
 And obviously, you can serve up the `.html` files with Python:
 
 ```
-> python -m http.server 10000
+> python3 -m http.server 10000
 Serving HTTP on :: port 10000 (http://[::]:10000/) ...
 ::1 - - [07/Dec/2021 09:22:39] "GET /howold.html HTTP/1.1" 200 -
 ::1 - - [07/Dec/2021 09:22:39] "GET /bootstrap.min.css HTTP/1.1" 200 -
@@ -51,4 +64,6 @@ serving at port 4242
 ```
 
 Note his Python script is using port 4242. You will have to look at
-the console output to see the results.
+the console output to see the results. The script exists mainly to serve
+`.wasm` with the correct `application/wasm` MIME type; modern Python
+knows that type already, so a plain `python3 -m http.server` works too.

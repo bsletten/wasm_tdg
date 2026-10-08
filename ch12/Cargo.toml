@@ -1,0 +1,20 @@
+# The four Rust examples in this chapter all embed wasmtime, so on their own
+# they each compiled it into their own `target/` directory -- about 3.2 GB of
+# almost identical build output, and four cold builds in CI.
+#
+# Grouping them in a workspace gives them one shared `ch12/target/` and one
+# `Cargo.lock`. `cargo run --release` from inside any of the example
+# directories still works exactly as the chapter describes; it just reuses
+# what the others already built.
+#
+# Each member deliberately keeps its own explicit dependency versions rather
+# than inheriting from `[workspace.dependencies]`, so that any one of these
+# directories can still be copied out and built on its own.
+[workspace]
+resolver = "2"
+members = [
+    "hello-wasi",
+    "hello-mvr",
+    "hello-extref",
+    "hello-modlink",
+]

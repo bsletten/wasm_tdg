@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Wasmtime;
 
 namespace wasmtime_dotnet
@@ -20,8 +20,14 @@ namespace wasmtime_dotnet
 	    );
 
             var instance = linker.Instantiate(store, module);
-	    var exec = instance.GetFunction(store, "exec");
-	    exec.Invoke(store);
+
+	    // Newer versions of wasmtime-dotnet capture the `Store` in the
+	    // `Instance`, so exported functions are retrieved and invoked
+	    // without passing it again. `GetAction` is the accessor for an
+	    // export that takes and returns nothing.
+	    var exec = instance.GetAction("exec")
+	        ?? throw new InvalidOperationException("module does not export 'exec'");
+	    exec();
         }
     }
 }

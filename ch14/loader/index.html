@@ -2,47 +2,48 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <link rel="stylesheet" href="bootstrap.min.css">
     <link rel="icon" href="data:;base64,=">
-    <script src="utils.js"></script>
+    <title>AssemblyScript Loader</title>
   </head>
   <body>
-    <title>AssemblyScript Loader</title>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@assemblyscript/loader/index.js">
-      import loader from "@assemblyscript/loader";
-      console.log("DOING THE THING");
-      
-      (async() => {
-	  var module = loader.instantiate(fetch("loader.wasm"));
-	  const { concat } = module.exports
-	  const { __newString, __getString } = modules.exports
+    <div class="container">
+      <h1>AssemblyScript Loader</h1>
+      <p>
+	Strings are not primitives in WebAssembly, so an AssemblyScript
+	function that takes and returns a <code>string</code> is really
+	exchanging pointers into linear memory. The AssemblyScript loader
+	wraps a module and adds the helpers needed to move strings across
+	that boundary.
+      </p>
+      <p id="output"></p>
+    </div>
 
-	  function doConcat(aStr, bStr) {
-	      let aPtr = __newString(aStr)
-	      let bPtr = __newString(bStr)
-	      let cPtr = concat(aPtr, bPtr)
-	      let cStr = __getString(cPtr)
-	      return cStr
-	  }
+    <!--
+      The loader is a bare ES module. In Node you would `import loader from
+      "@assemblyscript/loader"`, but a browser cannot resolve a bare specifier,
+      so we point at a pinned copy on a CDN instead. Note also that `loader.wasm`
+      must be built with `--exportRuntime` for `__newString`/`__getString` to
+      work -- see the `build:loader` script in ../package.json.
+    -->
+    <script type="module">
+      import loader from "https://cdn.jsdelivr.net/npm/@assemblyscript/loader@0.28.20/index.js";
 
-	  console.log(doConcat("Hello ", "world!"));
-      })();
-    </script>
-    
-    <script>
-      console.log(loader);
-/*      (async() => {
-	  var module = loader.instantiate(fetch("mem.wasm"));
-      })(); */
-/*      fetchAndInstantiate('mem.wasm').then(function(instance) {
-	  var mem = instance.exports.memory;
-	  var u8Arr = new Uint8Array(mem.buffer);
-	  
-          let location = instance.exports.whereToStore();
-	  u8Arr[location] = 123;
+      const output = document.getElementById("output");
 
-	  let value = instance.exports.readFromLocation(location);
-	  console.log("Round-tripped value: " + value);
-      }); */
+      const { exports } = await loader.instantiateStreaming(fetch("loader.wasm"));
+      const { concat, __newString, __getString } = exports;
+
+      function doConcat(aStr, bStr) {
+	  const aPtr = __newString(aStr);
+	  const bPtr = __newString(bStr);
+	  const cPtr = concat(aPtr, bPtr);
+	  return __getString(cPtr);
+      }
+
+      const result = doConcat("Hello, ", "world!");
+      console.log(result);
+      output.innerText = result;
     </script>
   </body>
 </html>

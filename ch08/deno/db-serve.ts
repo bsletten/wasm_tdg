@@ -1,45 +1,41 @@
-import { DB } from "https://deno.land/x/sqlite/mod.ts";
-import { serve } from "https://deno.land/std@0.93.0/http/server.ts";
+// `https://deno.land/x/sqlite` is no longer maintained; `@db/sqlite` on JSR is
+// its successor. Deno's built-in `Deno.serve` replaces the old std `serve()`.
+import { Database } from "jsr:@db/sqlite@0.12";
 
 // Create the Database. This requires write access!
 
-const db = new DB("pl.db");
-db.query(
-    "DROP TABLE IF EXISTS languages",
+const db = new Database("pl.db");
+db.exec("DROP TABLE IF EXISTS languages");
+db.exec(
+  "CREATE TABLE languages (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)",
 );
 
-db.query(
-   "CREATE TABLE languages (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)",
-);
-
-const names = ["C", "C++", "Rust", "TypeScript"]
+const names = ["C", "C++", "Rust", "TypeScript"];
 
 // Populate the database
 
+const insert = db.prepare("INSERT INTO languages (name) VALUES (?)");
 for (const name of names) {
-  db.query("INSERT INTO languages (name) VALUES (?)", [name]);
+  insert.run(name);
 }
 
 // Close out the connection
 
 db.close();
 
-const server = serve({ hostname: "0.0.0.0", port: 9000 });
-console.log(`HTTP webserver running.  Access it at:  http://localhost:9000/`);
+Deno.serve({ hostname: "0.0.0.0", port: 9000 }, () => {
+  // Re-open the Database
+  const db = new Database("pl.db");
+  let bodyContent = "Programming Languages that work with WebAssembly:\n\n";
 
-for await (const request of server) {
-    // Re-open the Database
-    
-    const db = new DB("pl.db");
-    let bodyContent = "Programming Languages that work with WebAssembly:\n\n";
-    
-    for(const [name] of db.query("SELECT name FROM languages")) {
-	bodyContent += name + "\n";
-    }
+  for (const [name] of db.prepare("SELECT name FROM languages").values()) {
+    bodyContent += name + "\n";
+  }
 
-    bodyContent += "\n";
-    request.respond({ status: 200, body: bodyContent });
+  bodyContent += "\n";
 
-    // Close the Database
-    db.close();
-}
+  // Close the Database
+  db.close();
+
+  return new Response(bodyContent);
+});

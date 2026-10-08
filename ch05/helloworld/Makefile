@@ -1,4 +1,3 @@
-LLVM_VERSION ?= 11
 
 DEPS = 
 OBJ = library.o
@@ -25,7 +24,7 @@ $(OUTPUT): $(OBJ) $(NANOLIBC_OBJ) Makefile
 		--export-dynamic \
 		--allow-undefined \
 		--initial-memory=131072 \
-		-error-limit=0 \
+		--error-limit=0 \
 		--lto-O3 \
 		-O3 \
 		--gc-sections \

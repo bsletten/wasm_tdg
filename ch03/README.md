@@ -59,7 +59,7 @@ previously. Keep in mind that you will need to look in the developer
 web console for the printed output of `imports.html`.
 
 ```
-> python -m http.server 10000
+> python3 -m http.server 10000
 Serving HTTP on :: port 10000 (http://[::]:10000/) ...
 ::1 - - [07/Dec/2021 08:39:53] "GET /imports2.html HTTP/1.1" 200 -
 ::1 - - [07/Dec/2021 08:39:54] "GET /hellolog.wasm HTTP/1.1" 304 -

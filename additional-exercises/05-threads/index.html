@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="icon" href="data:;base64,=">
+    <title>WebAssembly Threads</title>
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; margin: 2rem; max-width: 46rem; }
+      pre { background: #f4f4f4; padding: 1rem; overflow-x: auto; }
+      .bad { color: #b00; font-weight: 600; }
+      .good { color: #0a7a28; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <h1>WebAssembly Threads</h1>
+    <p id="isolation"></p>
+    <p>
+      Four pthreads, compiled by Emscripten to Web Workers sharing one
+      <code>SharedArrayBuffer</code> as linear memory, summing slices of the
+      same array.
+    </p>
+    <pre id="out">running...</pre>
+
+    <script>
+      const out = document.getElementById("out");
+      const iso = document.getElementById("isolation");
+
+      if (!window.crossOriginIsolated) {
+	  iso.innerHTML = '<span class="bad">crossOriginIsolated is false</span> &mdash; ' +
+	      'SharedArrayBuffer is unavailable. Serve this directory with ' +
+	      '<code>python3 server.py</code> rather than a plain static server.';
+	  out.textContent = "not run";
+      } else {
+	  iso.innerHTML = '<span class="good">crossOriginIsolated is true</span> &mdash; ' +
+	      'SharedArrayBuffer is available.';
+	  out.textContent = "";
+
+	  // Emscripten's generated loader looks for these hooks on `Module`.
+	  var Module = {
+	      print: text => { out.textContent += text + "\n"; },
+	      printErr: text => { out.textContent += "[stderr] " + text + "\n"; }
+	  };
+
+	  const s = document.createElement("script");
+	  s.src = "threads.js";
+	  document.body.appendChild(s);
+      }
+    </script>
+  </body>
+</html>

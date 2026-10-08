@@ -1,0 +1,36 @@
+# ---- OS / editor cruft -------------------------------------------------
+.DS_Store
+*~
+.idea/
+.vscode/
+
+# ---- C / C++ / Emscripten ---------------------------------------------
+*.o
+*.a
+*.obj
+a.out
+a.out.dSYM/
+
+# ---- Rust --------------------------------------------------------------
+target/
+
+# ---- wasm-pack / wasm-bindgen -----------------------------------------
+pkg/
+
+# ---- Node / AssemblyScript --------------------------------------------
+node_modules/
+
+# ---- .NET --------------------------------------------------------------
+bin/
+obj/
+
+# ---- Deno --------------------------------------------------------------
+deno.lock
+
+# ---- Example scratch output -------------------------------------------
+# ch11/hello-fs writes this when run under a WASI runtime with --dir=.
+ch11/hello-fs/hello.txt
+
+# ---- additional-exercises intermediates -------------------------------
+# Rebuilt by `make` from the two component crates.
+additional-exercises/03-component-composition/composed.wasm

@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-wasmtime = "0.28.0"
-wasmtime-wasi = "0.28.0"
+wasmtime = "44"
+wasmtime-wasi = "44"
 anyhow = "1.0.19"
