@@ -47,6 +47,17 @@ response to Spectre, which is also why `SharedArrayBuffer` was briefly
 disabled entirely. Any chapter-style example that wants threads needs this
 server, not the one used elsewhere in the repository.
 
+### ...and on GitHub Pages
+
+A static host cannot set headers at all, which would normally make this
+example impossible to publish. The page therefore vendors
+[`coi-serviceworker`](https://github.com/gzuidhof/coi-serviceworker) (MIT): a
+service worker that re-serves the page with both headers and reloads once, so
+the second load is cross-origin isolated. That is why the hosted copy at
+<https://bsletten.github.io/wasm_tdg/additional-exercises/05-threads/>
+flickers on first visit. Served by `server.py` the real headers are already
+there and the worker does nothing.
+
 To confirm the atomics really are in the binary:
 
 ```

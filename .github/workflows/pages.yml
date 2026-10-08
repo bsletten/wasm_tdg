@@ -1,0 +1,177 @@
+name: pages
+
+# Builds the browser-runnable examples from source and publishes them to
+# GitHub Pages. Nothing here is hand-copied: every .wasm served by the site is
+# produced by wat2wasm, clang, emcc, rustc, asc or dotnet in this job.
+on:
+  push:
+    branches: [main]
+  # Build (but do not deploy) on pull requests, so a change to the site is
+  # proven to assemble before it can publish.
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false   # never interrupt a deploy half-way
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # ---- toolchains -------------------------------------------------
+      - run: sudo apt-get update && sudo apt-get install -y wabt lld rsync
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      # ---- build the generated artifacts ------------------------------
+      - name: Chapter 2 (wat2wasm) — deliberately not committed
+        run: wat2wasm ch02/hello.wat -o ch02/hello.wasm
+
+      - name: Chapter 5 (clang --target=wasm32, wasm-ld)
+        run: |
+          set -eux
+          clang --target=wasm32 -nostdlib -Wl,--no-entry -Wl,--export-all \
+            ch05/howold2.c -o ch05/howold.wasm
+          make -C ch05/helloworld clean
+          make -C ch05/helloworld
+
+      - name: Chapter 6 (emcc)
+        run: |
+          set -eux
+          ( cd ch06 && emcc hello.c -o hello.js )
+          make -C ch06/bitmap
+
+      - name: Chapter 10 (rustc + wasm-pack)
+        run: |
+          set -eux
+          rustc -A dead_code --target wasm32-unknown-unknown -C opt-level=3 \
+            --crate-type=cdylib ch10/add.rs -o ch10/add.wasm
+          ( cd ch10/geo-example && wasm-pack build --target web )
+
+      - name: Chapter 14 (asc)
+        run: |
+          set -eux
+          cd ch14
+          npm install
+          npm run build
+
+      - name: Chapter 13 (dotnet publish)
+        run: dotnet publish ch13/blazor-web -c Release -o ch13/publish
+
+      - name: Additional exercises (SIMD, threads)
+        run: |
+          set -eux
+          make -C additional-exercises/04-simd page
+          make -C additional-exercises/05-threads
+
+      # ---- assemble ---------------------------------------------------
+      - name: Assemble _site
+        run: |
+          set -eux
+          mkdir -p _site
+
+          # Chapters that are already plain static pages plus their artifacts.
+          for d in ch02 ch03 ch04 ch05 ch06 ch07 ch10 ch14; do
+            rsync -a --exclude='target/' --exclude='node_modules/' \
+                     --exclude='*.o' --exclude='.gitignore' "$d" _site/
+          done
+
+          # Only the detector from ch12; the rest of the chapter is native Rust.
+          mkdir -p _site/ch12
+          rsync -a ch12/detector _site/ch12/
+
+          mkdir -p _site/additional-exercises
+          rsync -a --exclude='target/' \
+            additional-exercises/04-simd additional-exercises/05-threads \
+            _site/additional-exercises/
+
+          # Blazor's published static output.
+          mkdir -p _site/ch13/blazor
+          rsync -a ch13/publish/wwwroot/ _site/ch13/blazor/
+          # It is published assuming it is served from the domain root.
+          sed -i 's|<base href="/" />|<base href="/wasm_tdg/ch13/blazor/" />|' \
+            _site/ch13/blazor/index.html
+          grep -q 'wasm_tdg/ch13/blazor' _site/ch13/blazor/index.html
+
+          cp site/index.html _site/index.html
+
+          # Stamp the landing page with the commit and build time.
+          STAMP="Built from ${GITHUB_SHA::7} on $(date -u '+%Y-%m-%d %H:%M UTC')."
+          sed -i "s|<html lang=\"en\">|<html lang=\"en\" data-build=\"$STAMP\">|" \
+            _site/index.html
+          grep -q 'data-build' _site/index.html
+
+          # Jekyll would strip _framework/, which Blazor needs.
+          touch _site/.nojekyll
+
+      - name: Verify every link on the landing page resolves
+        run: |
+          set -eu
+          python3 - <<'PY'
+          import re, os, sys
+          s = open('_site/index.html', encoding='utf-8').read()
+          hrefs = {m.group(1) for m in re.finditer(r'href="([^"]+)"', s)}
+          missing = []
+          for h in sorted(hrefs):
+              if h.startswith(('http', 'data:', '#', 'mailto:')):
+                  continue
+              p = os.path.join('_site', h)
+              if h.endswith('/'):
+                  p = os.path.join(p, 'index.html')
+              if not os.path.exists(p):
+                  missing.append(h)
+          if missing:
+              print('MISSING targets on the landing page:')
+              for m in missing:
+                  print('   ', m)
+              sys.exit(1)
+          print(f'all {len(hrefs)} landing-page links resolve')
+          PY
+
+      - name: Report what is being published
+        run: |
+          echo "### Published pages" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          (cd _site && find . -name '*.html' | sort | sed 's|^\./||') >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "Total size: $(du -sh _site | cut -f1)" >> $GITHUB_STEP_SUMMARY
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    # Only the default branch publishes; PRs stop after the build job.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -34,3 +34,10 @@ ch11/hello-fs/hello.txt
 # ---- additional-exercises intermediates -------------------------------
 # Rebuilt by `make` from the two component crates.
 additional-exercises/03-component-composition/composed.wasm
+
+# ---- GitHub Pages build ------------------------------------------------
+_site/
+ch13/publish/
+# ch02's .wasm is deliberately not committed -- building it from the .wat is
+# the exercise. The Pages workflow builds it with wat2wasm.
+ch02/hello.wasm

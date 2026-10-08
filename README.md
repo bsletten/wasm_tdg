@@ -5,6 +5,13 @@ Welcome to the code repository for this book on WebAssembly.
 This includes code samples from the book as well as additional projects and
 examples of features that were not widely supported at the time of writing.
 
+> **Live examples: <https://bsletten.github.io/wasm_tdg/>** &mdash; the
+> browser-runnable examples from the book, compiled from this repository by
+> [CI](.github/workflows/pages.yml) and served from GitHub Pages. Twenty-seven
+> pages across chapters 2, 3, 4, 5, 6, 7, 10, 12, 13 and 14, plus the SIMD and
+> threads exercises. Many log to the JavaScript console rather than the page,
+> as they do in the book; the index says which.
+
 > **Status, October 2026.** The book was written in 2021, and a lot of the
 > surrounding toolchain moved underneath it. Everything here has been brought
 > back to a state where it builds and runs against current tools, and there is
@@ -113,6 +120,39 @@ requires; it ships its own `server.py`.
 * A `.gitignore`, a `LICENSE`, [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md),
   and CI. Build output that had been committed (`ch13/**/obj`, `*.o`,
   a `.DS_Store`) is no longer tracked.
+
+## The live example site
+
+<https://bsletten.github.io/wasm_tdg/>
+
+[`.github/workflows/pages.yml`](.github/workflows/pages.yml) builds the
+browser-runnable examples from source on every push to `main` and publishes
+them. Nothing is hand-copied: the `.wasm` each page loads is the output of
+`wat2wasm`, `clang`, `emcc`, `rustc`, `asc` or `dotnet publish` running in CI,
+and the workflow fails if any link on the index does not resolve.
+
+The landing page is [`site/index.html`](site/index.html).
+
+What is *not* hosted, because it cannot run in a browser: the native C and Rust
+builds (ch01, ch05), the Node/Deno/N-API examples (ch08), the WASI
+command-line modules (ch11, ch17), the native programs that *embed* wasmtime
+(ch12's four Rust examples, ch13's `wasmtime-dotnet`), and the Preview 2/3
+components in `additional-exercises` 01, 02, 03 and 06. All of those are still
+built and run by [`build.yml`](.github/workflows/build.yml) on every push --
+they just produce terminal output instead of a page.
+
+Two notes on the hosted set:
+
+* **Threads** need cross-origin isolation, and GitHub Pages cannot set
+  response headers. The page vendors
+  [`coi-serviceworker`](https://github.com/gzuidhof/coi-serviceworker) (MIT),
+  which re-serves the page with `Cross-Origin-Opener-Policy` and
+  `Cross-Origin-Embedder-Policy` and reloads once. Served locally with its own
+  `server.py`, the real headers are present and the worker is a no-op.
+* **Blazor** is published assuming it is served from a domain root, so the
+  workflow rewrites its `<base href>` for the subpath and writes a
+  `.nojekyll` file -- without which Jekyll would strip the `_framework`
+  directory the .NET runtime loads from.
 
 ## Seeing it in the wild : the ikigai resolution kernel
 

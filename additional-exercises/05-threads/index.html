@@ -21,14 +21,26 @@
     </p>
     <pre id="out">running...</pre>
 
+    <!--
+      GitHub Pages cannot set response headers, so on a static host the two
+      cross-origin isolation headers have to come from somewhere else. This
+      service worker re-serves the page with them and reloads once, which is
+      enough to make SharedArrayBuffer available. When this directory is
+      served by its own server.py, the real headers are already present and
+      the worker is a no-op.
+    -->
+    <script src="coi-serviceworker.js"></script>
+
     <script>
       const out = document.getElementById("out");
       const iso = document.getElementById("isolation");
 
       if (!window.crossOriginIsolated) {
 	  iso.innerHTML = '<span class="bad">crossOriginIsolated is false</span> &mdash; ' +
-	      'SharedArrayBuffer is unavailable. Serve this directory with ' +
-	      '<code>python3 server.py</code> rather than a plain static server.';
+	      'SharedArrayBuffer is unavailable. If the page just loaded, the ' +
+	      'service worker may still be installing &mdash; reload once. ' +
+	      'Otherwise serve this directory with <code>python3 server.py</code>, ' +
+	      'which sets the headers directly.';
 	  out.textContent = "not run";
       } else {
 	  iso.innerHTML = '<span class="good">crossOriginIsolated is true</span> &mdash; ' +

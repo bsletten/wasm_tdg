@@ -40,6 +40,17 @@ bites people porting numeric code.
 no error. Use `make disasm` to confirm you actually got vector instructions,
 and `ch12/detector` to confirm the browser will accept them.
 
+## In the browser
+
+`index.html` runs the same comparison in your browser, with a
+`wasm-feature-detect` check first so it degrades honestly rather than failing
+to validate. It is hosted at
+<https://bsletten.github.io/wasm_tdg/additional-exercises/04-simd/>, or locally:
+
+```
+> make serve      # http://localhost:10002/
+```
+
 The module has no imports at all: the two input buffers are `static mut`
 arrays, and JavaScript writes into them through the exported `memory`. That is
 Chapter 4's technique, unchanged.
