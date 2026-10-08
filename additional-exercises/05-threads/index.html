@@ -32,31 +32,51 @@
     <script src="coi-serviceworker.js"></script>
 
     <script>
-      const out = document.getElementById("out");
-      const iso = document.getElementById("isolation");
+      // Wrapped in a function on purpose. Emscripten's generated threads.js is
+      // a classic script full of top-level `var` declarations -- including
+      // `var out` and `var err`. A global `let`/`const` of the same name makes
+      // that entire file fail to evaluate with "Identifier 'out' has already
+      // been declared", before one line of it runs: the page just sits there
+      // and the only clue is a SyntaxError in the console. Keeping our names
+      // out of global scope avoids the whole class of problem. `Module` is the
+      // one name that genuinely must be global, so it is set on `window`.
+      (function () {
+	  const outEl = document.getElementById("out");
+	  const isoEl = document.getElementById("isolation");
+	  const show = (text) => { outEl.textContent += text + "\n"; };
 
-      if (!window.crossOriginIsolated) {
-	  iso.innerHTML = '<span class="bad">crossOriginIsolated is false</span> &mdash; ' +
-	      'SharedArrayBuffer is unavailable. If the page just loaded, the ' +
-	      'service worker may still be installing &mdash; reload once. ' +
-	      'Otherwise serve this directory with <code>python3 server.py</code>, ' +
-	      'which sets the headers directly.';
-	  out.textContent = "not run";
-      } else {
-	  iso.innerHTML = '<span class="good">crossOriginIsolated is true</span> &mdash; ' +
-	      'SharedArrayBuffer is available.';
-	  out.textContent = "";
+	  outEl.textContent = "";
+
+	  if (window.crossOriginIsolated) {
+	      isoEl.innerHTML = '<span class="good">crossOriginIsolated is true</span> &mdash; ' +
+		  'SharedArrayBuffer is available.';
+	  } else {
+	      isoEl.innerHTML = '<span class="bad">crossOriginIsolated is false</span> &mdash; ' +
+		  'SharedArrayBuffer is unavailable, so the error below is expected. ' +
+		  'If the page has only just loaded, the service worker may still be ' +
+		  'installing &mdash; reload once. Otherwise serve this directory with ' +
+		  '<code>python3 server.py</code>, which sets the headers directly.';
+	  }
 
 	  // Emscripten's generated loader looks for these hooks on `Module`.
-	  var Module = {
-	      print: text => { out.textContent += text + "\n"; },
-	      printErr: text => { out.textContent += "[stderr] " + text + "\n"; }
+	  window.Module = {
+	      print: show,
+	      printErr: (text) => show("[stderr] " + text),
+	      onAbort: (what) => show("[aborted] " + what)
 	  };
 
-	  const s = document.createElement("script");
-	  s.src = "threads.js";
-	  document.body.appendChild(s);
-      }
+	  // Surface failures on the page, not only in the console.
+	  window.addEventListener("error", (e) => show("[error] " + (e.message || e.error)));
+	  window.addEventListener("unhandledrejection", (e) => show("[unhandled rejection] " + e.reason));
+      })();
     </script>
+
+    <!--
+      Loaded with a plain static tag rather than an injected one. Emscripten
+      reads `document.currentScript.src` to get the URL it passes to
+      `new Worker(...)` for each pthread, so the script must be one the browser
+      is executing in the normal way.
+    -->
+    <script src="threads.js"></script>
   </body>
 </html>
