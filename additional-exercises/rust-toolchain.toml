@@ -1,0 +1,8 @@
+# The component-model examples here need a Rust whose `wasm32-wasip2`
+# standard library binds the same WASI interface versions as the
+# `wasip2`/`wstd` crates (wasi:io@0.2.12 and friends). An older toolchain
+# fails the link with "import module mismatch for symbol: [resource-drop]error".
+# Pinning to stable keeps that in sync without touching your default toolchain.
+[toolchain]
+channel = "stable"
+targets = ["wasm32-wasip2"]

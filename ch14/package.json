@@ -1,0 +1,21 @@
+{
+  "name": "wasm-tdg-ch14",
+  "private": true,
+  "description": "AssemblyScript examples for Chapter 14 of 'WebAssembly: The Definitive Guide'",
+  "type": "module",
+  "scripts": {
+    "build": "npm run build:hello && npm run build:as-mem && npm run build:stdlib && npm run build:loader && npm run build:hello-imp",
+    "build:hello": "asc hello/hello.ts -o hello/hello.wasm",
+    "build:as-mem": "asc as-mem/mem.ts -o as-mem/mem.wasm",
+    "build:stdlib": "asc stdlib/stdlib.ts -o stdlib/stdlib.wasm",
+    "build:loader": "asc loader/loader.ts -o loader/loader.wasm --exportRuntime",
+    "build:hello-imp": "asc hello-imp/hello.ts -o hello-imp/hello.wasm",
+    "serve": "python3 -m http.server 10000"
+  },
+  "devDependencies": {
+    "assemblyscript": "^0.28.20"
+  },
+  "dependencies": {
+    "@assemblyscript/loader": "^0.28.20"
+  }
+}

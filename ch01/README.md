@@ -1,8 +1,10 @@
 ## Chapter 1 : Introduction
 
 There are not many code samples in this chapter, but we do have the
-recurring "Hello, World!" example in `hello.c`. We can compile this to
-`asm.js` using the `emcc` command line tool.
+recurring "Hello, World!" example in `hello.c`. We can compile this
+using the `emcc` command line tool. (When the book was written `emcc`
+could still target `asm.js`; modern versions emit WebAssembly by
+default, so you get an `a.out.wasm` alongside the `a.out.js` loader.)
 
 If you have followed the instructions for installing this tool, you
 should be able to execute the following:

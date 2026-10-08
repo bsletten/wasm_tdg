@@ -1,14 +1,15 @@
 use anyhow::Result;
 use wasmtime::*;
-use wasmtime_wasi::sync::WasiCtxBuilder;
+use wasmtime_wasi::WasiCtxBuilder;
+use wasmtime_wasi::p1::{self, WasiP1Ctx};
 
 fn main() -> Result<()> {
     let engine = Engine::default();
 
     // First set up our linker which is going to be linking modules together. We
     // want our linker to have wasi available, so we set that up here as well.
-    let mut linker = Linker::new(&engine);
-    wasmtime_wasi::add_to_linker(&mut linker, |s| s)?;
+    let mut linker: Linker<WasiP1Ctx> = Linker::new(&engine);
+    p1::add_to_linker_sync(&mut linker, |s| s)?;
 
     // Load and compile our two modules
     let linking1 = Module::from_file(&engine, "linking1.wat")?;
@@ -17,8 +18,8 @@ fn main() -> Result<()> {
     // Configure WASI and insert it into a `Store`
     let wasi = WasiCtxBuilder::new()
         .inherit_stdio()
-        .inherit_args()?
-        .build();
+        .inherit_args()
+        .build_p1();
     let mut store = Store::new(&engine, wasi);
 
     // Instantiate our first module which only uses WASI, then register that
@@ -28,7 +29,7 @@ fn main() -> Result<()> {
 
     // And with that we can perform the final link and the execute the module.
     let linking1 = linker.instantiate(&mut store, &linking1)?;
-    let run = linking1.get_typed_func::<(), (), _>(&mut store, "run")?;
+    let run = linking1.get_typed_func::<(), ()>(&mut store, "run")?;
     run.call(&mut store, ())?;
     Ok(())
 }

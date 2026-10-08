@@ -1,0 +1,251 @@
+name: build
+
+# Every failure fixed in this repository in 2026 would have been caught here
+# the week it broke. The point of this workflow is to never need that
+# archaeology again.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Toolchains move even when this repository does not.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wat:
+    name: WAT (wabt)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: sudo apt-get update && sudo apt-get install -y wabt
+      - name: Assemble every .wat
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            if wat2wasm "$f" -o /dev/null; then
+              echo "ok   $f"
+            else
+              echo "FAIL $f"; fail=1
+            fi
+          done < <(git ls-files '*.wat')
+          exit $fail
+      - name: Committed .wasm matches its .wat
+        run: |
+          fail=0
+          while IFS= read -r wat; do
+            wasm="${wat%.wat}.wasm"
+            # ch06/hello.wat is disassembled Emscripten output, not a source.
+            [ -f "$wasm" ] || continue
+            [ "$wat" = "ch06/hello.wat" ] && continue
+            wat2wasm "$wat" -o /tmp/check.wasm
+            if cmp -s /tmp/check.wasm "$wasm"; then
+              echo "ok   $wasm"
+            else
+              echo "FAIL $wasm is stale relative to $wat"; fail=1
+            fi
+          done < <(git ls-files '*.wat')
+          exit $fail
+
+  c-native:
+    name: C/C++ (host clang)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build and run the standalone C examples
+        run: |
+          set -eux
+          clang ch01/hello.c   -o /tmp/ch01 && /tmp/ch01
+          clang ch05/howold.c  -o /tmp/ch05 && /tmp/ch05
+          clang ch06/hello.c   -o /tmp/ch06 && /tmp/ch06
+          clang ch11/hello.c   -o /tmp/ch11 && /tmp/ch11
+          clang ch07/main.c ch07/library.c -o /tmp/ch07 && /tmp/ch07
+          clang ch05/simplemain.c ch05/simple.c -o /tmp/sm && /tmp/sm
+
+  c-wasm:
+    name: C/C++ (wasm32, lld)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: sudo apt-get update && sudo apt-get install -y lld wabt
+      - name: ch05 standalone module
+        run: |
+          set -eux
+          clang --target=wasm32 -nostdlib -Wl,--no-entry -Wl,--export-all \
+            ch05/howold2.c -o /tmp/howold.wasm
+          wasm-objdump -x /tmp/howold.wasm | grep -q howOld
+      - name: ch05/helloworld (clang++ + wasm-ld)
+        run: |
+          set -eux
+          cd ch05/helloworld
+          make clean
+          make
+          test -s library.wasm
+
+  emscripten:
+    name: Emscripten
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: ch06 hello
+        run: |
+          set -eux
+          cd ch06 && emcc hello.c -o /tmp/hello.js && node /tmp/hello.js
+      - name: ch06 bitmap (EXPORTED_RUNTIME_METHODS)
+        run: |
+          set -eux
+          cd ch06/bitmap && make && test -s bitmap_test.wasm
+      - name: ch08 node
+        run: |
+          set -eux
+          cd ch08/node && emcc add.c
+          node --experimental-wasm-modules index.mjs
+      - name: additional-exercises 05-threads
+        run: |
+          set -eux
+          cd additional-exercises/05-threads && make && node threads.js
+
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown, wasm32-wasip1, wasm32-wasip2
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: ch10 standalone
+        run: |
+          set -eux
+          rustc ch10/helloworld.rs -o /tmp/hw && /tmp/hw
+          rustc -A dead_code --target wasm32-unknown-unknown -C opt-level=3 \
+            --crate-type=cdylib ch10/add.rs -o /tmp/add.wasm
+          # These two are *supposed* to fail; that is the lesson in the book.
+          ! rustc ch10/memcheck.rs -o /tmp/mc
+      - name: ch10 geo-example
+        run: cargo build --release --target wasm32-unknown-unknown --manifest-path ch10/geo-example/Cargo.toml
+      - name: ch11
+        run: |
+          set -eux
+          for p in ch11/hello-world ch11/hello-fs; do
+            cargo build --release --manifest-path $p/Cargo.toml
+            cargo build --release --target wasm32-wasip1 --manifest-path $p/Cargo.toml
+          done
+      - name: ch12 (wasmtime)
+        run: |
+          set -eux
+          for p in ch12/hello-wasi ch12/hello-mvr ch12/hello-extref ch12/hello-modlink; do
+            ( cd $p && cargo run --release )
+          done
+      - name: additional-exercises 04-simd
+        run: |
+          set -eux
+          cd additional-exercises/04-simd && make run
+
+  components:
+    name: Components (wasmtime, wac)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip2
+      - uses: Swatinem/rust-cache@v2
+      - uses: bytecodealliance/actions/wasmtime/setup@v1
+      - uses: bytecodealliance/actions/wasm-tools/setup@v1
+      - run: cargo install wac-cli --locked
+      - name: 01 wasi-p2-cli
+        run: cd additional-exercises/01-wasi-p2-cli && make run && make wit
+      - name: 02 wasi-http
+        run: |
+          set -eux
+          cd additional-exercises/02-wasi-http
+          make target/wasm32-wasip2/release/wasi_http.wasm
+          wasmtime serve -S cli target/wasm32-wasip2/release/wasi_http.wasm &
+          for i in $(seq 1 30); do curl -sf http://localhost:8080/hello && break || sleep 1; done
+          test "$(curl -sf 'http://localhost:8080/how-old?now=2026&born=2000')" = "You are 26"
+      - name: 03 component-composition
+        run: cd additional-exercises/03-component-composition && make run
+      - name: 06 wasi-p3-async
+        run: cd additional-exercises/06-wasi-p3-async && make run
+
+  assemblyscript:
+    name: AssemblyScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Build every ch14 module
+        run: |
+          set -eux
+          cd ch14
+          npm install
+          npm run build
+          for f in hello/hello.wasm hello-imp/hello.wasm as-mem/mem.wasm \
+                   stdlib/stdlib.wasm loader/loader.wasm; do
+            test -s "$f"
+          done
+      - name: Check they behave
+        run: cd ch14 && node --input-type=module -e "$(cat ../.github/scripts/check-ch14.mjs)"
+
+  deno:
+    name: Deno
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: cd ch08/deno && deno check main.ts main-serve.ts db-serve.ts
+      - run: cd ch08/deno && deno run --allow-read main.ts
+
+  dotnet:
+    name: .NET
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+      - run: cd ch13/wasmtime-dotnet && dotnet run
+      - run: cd ch13/blazor-web && dotnet build
+
+  zig:
+    name: Zig
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.17.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: bytecodealliance/actions/wasmtime/setup@v1
+      - name: howOld
+        run: |
+          set -eux
+          cd ch17/zig
+          zig build-exe howOld.zig -target wasm32-freestanding -fno-entry -rdynamic -OReleaseSmall
+          node main.js
+      - name: preopens
+        run: |
+          set -eux
+          cd ch17/zig
+          zig build-exe preopens.zig -target wasm32-wasi -OReleaseSmall
+          # std.debug.print writes to stderr, so redirect before grepping.
+          wasmtime --dir=. preopens.wasm 2>&1 | grep -q "Preopen"

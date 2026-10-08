@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <title>Importing JavaScript Functions to AssemblyScript</title>
+    <script src="utils.js"></script>
+  </head>
+  <body>
+    <script>
+      var importObject = {
+	hello: {
+	  log: value => console.log(value)
+	}
+      };
+
+      fetchAndInstantiate('hello.wasm', importObject).then(function(instance) {
+        instance.exports.addAndLog(12, 30);  
+      });
+    </script>
+  </body>
+</html>

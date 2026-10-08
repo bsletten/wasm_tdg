@@ -57,7 +57,10 @@
 
 	   for (var y = 0; y < height; ++y) {
 	      for (var x = 0; x < width; ++x) {
-		  var index1 = (x+width*(height-y))*4;
+		  // BMP rows run bottom-up, so this flips them. Note `height-1-y`:
+		  // with `height-y` the first iteration lands one full row past the
+		  // end of the buffer, silently dropping a row and shifting the image.
+		  var index1 = (x+width*(height-1-y))*4;
 		  var index2 = x * 3 + stride * y;
 		  data[index1] = bmpdata[index2 + 2];
 		  data[index1 + 1] = bmpdata[index2 + 1];
@@ -75,7 +78,9 @@
 	  var canvas = document.getElementById("output");
 	  var context = canvas.getContext('2d');
 
-	  var image = FS.readFile("./test20_julia_set_vga.bmp");
+	  // Emscripten no longer creates a bare global `FS`; it hangs off Module
+	  // (and must be named in EXPORTED_RUNTIME_METHODS -- see the Makefile).
+	  var image = Module.FS.readFile("./test20_julia_set_vga.bmp");
 	  var bmp = getBMP(image.buffer);
 	  var imageData = convertToImageData(bmp);
 

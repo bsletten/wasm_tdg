@@ -1,0 +1,15 @@
+package wasmtdg:calculator@0.1.0;
+
+/// The contract between the two components. Note that it says nothing about
+/// Rust, or about linear memory layout, or about calling conventions -- those
+/// are the component model's job. An implementation of this interface could
+/// be written in any language that compiles to a component.
+interface ages {
+    /// How old is someone born in `year-born` during `year-now`?
+    /// Returns -1 if they have not been born yet.
+    how-old: func(year-now: s32, year-born: s32) -> s32;
+}
+
+world calculator {
+    export ages;
+}

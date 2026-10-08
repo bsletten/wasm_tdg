@@ -1,0 +1,12 @@
+[package]
+name = "wasi-p3-async"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasip3 = "0.9"
+futures = "0.3"
+wit-bindgen = { version = "0.62", features = ["async-spawn"], default-features = false }

@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     
     let instance = Instance::new(&mut store, &module, &[callback_func.into()])?;
 
-    let myfunc = instance.get_typed_func::<(i32,i32), (i32, i32), _>(&mut store, "myfunc")?;
+    let myfunc = instance.get_typed_func::<(i32,i32), (i32, i32)>(&mut store, "myfunc")?;
     let (a, b) = myfunc.call(&mut store, (13, 43))?;
 
     println!("Swapping {} {} produces {} {}", 13, 43, a, b);

@@ -2,40 +2,92 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <script type="module">
-      import {
-	       bigInt,
-	       bulkMemory,
-	       exceptions,
-//	       memory64,
-	       multiValue,
-	       mutableGlobals,
-	       referenceTypes,
-	       saturatedFloatToInt,
-	       signExtensions,
-	       simd,
-	       tailCall
-	     } from "https://unpkg.com/wasm-feature-detect?module";
-
-      function test(test, promise) {
-	  promise().then( supported => {
-	      console.log("Test: " + test + " is " + supported);
-	  });
-      }
-
-      test("BIGINT", bigInt);
-      test("BULK MEMORY", bulkMemory);
-      test("EXCEPTIONS", exceptions);
-//      test("MEMORY64", memory64);
-      test("MULTIVALUE", multiValue);
-      test("MUTABLEGLOBALS", mutableGlobals);
-      test("REFERENCETYPES", referenceTypes);
-      test("NONTRAPPING F-to-I", saturatedFloatToInt);
-      test("SIGN EXTENSIONS", signExtensions);
-      test("SIMD",  simd);
-      test("TAIL CALL", tailCall);
-    </script>
+    <link rel="icon" href="data:;base64,=">
+    <title>WebAssembly Feature Detector</title>
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; margin: 2rem; max-width: 46rem; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid #ddd; }
+      th { border-bottom: 2px solid #999; }
+      code { font-family: ui-monospace, monospace; }
+      .yes { color: #0a7a28; font-weight: 600; }
+      .no  { color: #999; }
+      caption { text-align: left; padding-bottom: 0.75rem; color: #555; }
+    </style>
   </head>
   <body>
+    <h1>WebAssembly Feature Detector</h1>
+    <p>
+      Results are printed to the JavaScript console, as in the book, and also
+      rendered in the table below. The set of detectable proposals grows over
+      time: when this chapter was written, things like threads, garbage
+      collection and JSPI were still on the horizon.
+    </p>
+    <table id="results">
+      <caption>Detected in this browser</caption>
+      <thead><tr><th>Proposal</th><th><code>wasm-feature-detect</code> export</th><th>Supported</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <script type="module">
+      // Pinned so this page keeps behaving the same way over time. Drop the
+      // version to track the latest set of detectors.
+      import * as detect from "https://cdn.jsdelivr.net/npm/wasm-feature-detect@1.9.0/dist/esm/index.js";
+
+      // Everything wasm-feature-detect can currently test for. The commented
+      // entries in earlier editions of this example -- memory64 in particular --
+      // are now simply part of the list.
+      const FEATURES = [
+	["BigInt integration",            "bigInt"],
+	["Bulk memory operations",        "bulkMemory"],
+	["Exception handling",            "exceptions"],
+	["Exception handling (final)",    "exceptionsFinal"],
+	["Extended const expressions",    "extendedConst"],
+	["Garbage collection",            "gc"],
+	["JS string builtins",            "jsStringBuiltins"],
+	["JSPI (stack switching)",        "jspi"],
+	["Memory64",                      "memory64"],
+	["Multiple memories",             "multiMemory"],
+	["Multi-value returns",           "multiValue"],
+	["Mutable globals",               "mutableGlobals"],
+	["Reference types",               "referenceTypes"],
+	["Relaxed SIMD",                  "relaxedSimd"],
+	["Non-trapping float-to-int",     "saturatedFloatToInt"],
+	["Sign extension operators",      "signExtensions"],
+	["Fixed-width SIMD",              "simd"],
+	["Streaming compilation",         "streamingCompilation"],
+	["Tail calls",                    "tailCall"],
+	["Threads / atomics",             "threads"],
+	["Type reflection",               "typeReflection"],
+	["Typed function references",     "typedFunctionReferences"],
+	["Wide arithmetic",               "wideArithmetic"],
+      ];
+
+      const tbody = document.querySelector("#results tbody");
+
+      for (const [label, name] of FEATURES) {
+	  const probe = detect[name];
+	  const supported = typeof probe === "function" ? await probe() : null;
+
+	  console.log("Test: " + label + " (" + name + ") is " + supported);
+
+	  const row = tbody.insertRow();
+	  row.insertCell().textContent = label;
+
+	  const exportCell = row.insertCell();
+	  const code = document.createElement("code");
+	  code.textContent = name;
+	  exportCell.appendChild(code);
+
+	  const cell = row.insertCell();
+	  if (supported === null) {
+	      cell.textContent = "not in this version";
+	      cell.className = "no";
+	  } else {
+	      cell.textContent = supported ? "yes" : "no";
+	      cell.className = supported ? "yes" : "no";
+	  }
+      }
+    </script>
   </body>
 </html>
