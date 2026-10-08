@@ -45,6 +45,14 @@ inside an old transitive dependency. The API changes that mattered:
   and `wasmtime_wasi::p1::add_to_linker_sync`, and the context is built
   with `.build_p1()`. `inherit_args()` no longer returns a `Result`.
 
+The four are also grouped into a Cargo workspace (`ch12/Cargo.toml`) so they
+share one `ch12/target/` and one `Cargo.lock`. Each embeds wasmtime, so built
+separately they produced about 3.2 GB of near-identical output and four cold
+compiles; together it is one. `cargo run --release` from inside any example
+directory works exactly as described above -- it just reuses what the others
+already built. Each example still pins its own dependency versions rather than
+inheriting them, so any one directory can be copied out and built on its own.
+
 See the `additional-exercises` directory for examples built on the newer
 WASI Preview 2 / Preview 3 component model rather than the Preview 1
 core-module interface used here.

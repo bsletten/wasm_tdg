@@ -12,6 +12,11 @@ on:
     - cron: "0 6 * * 1"
   workflow_dispatch:
 
+# A newer push to the same branch makes the in-flight run irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -146,8 +151,11 @@ jobs:
       - name: ch12 (wasmtime)
         run: |
           set -eux
-          for p in ch12/hello-wasi ch12/hello-mvr ch12/hello-extref ch12/hello-modlink; do
-            ( cd $p && cargo run --release )
+          # One workspace build for all four examples; the per-example
+          # `cargo run` calls below then reuse ch12/target/.
+          cargo build --release --manifest-path ch12/Cargo.toml
+          for p in hello-wasi hello-mvr hello-extref hello-modlink; do
+            ( cd ch12/$p && cargo run --release )
           done
       - name: additional-exercises 04-simd
         run: |
